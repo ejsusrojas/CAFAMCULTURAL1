@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>San Pedro de Macorís - Turismo</title>
+    <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="#inicio">Inicio</a></li>
+            <li><a href="#atracciones">Atracciones Turísticas</a></li>
+            <li><a href="#nosotros">Nosotros / Historia</a></li>
+            <li><a href="#deporte-gastronomia">Deporte y Gastronomía</a></li>
+            <li><a href="#reserva">Reservas</a></li>
+        </ul>
+    </nav>
+
+    <header id="inicio">
+        <h1>San Pedro de Macorís - Turismo</h1>
+        <div class="slider">
+            <div class="slides">
+                <img src="0.Parador-Fotografico-de-SPM.jpg" alt="San Pedro de Macorís 1" class="slide active" />
+                <img src="estadio-tetelo-vargas-osvaldo-carbuccia.jpg" alt="San Pedro de Macorís 2" class="slide" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/1/1a/San_Pedro_de_Macor%C3%ADs_-_Malec%C3%B3n.jpg" alt="San Pedro de Macorís 3" class="slide" />
+            </div>
+            <button class="prev">&#10094;</button>
+            <button class="next">&#10095;</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="atracciones">
+            <h2>Atracciones Turísticas</h2>
+            <div class="attraction">
+                <img src="IMG-20241222-WA0053 (1).jpg" alt="Malecón de San Pedro de Macorís" />
+                <p>Malecón de San Pedro de Macorís</p>
+            </div>
+            <div class="attraction">
+                <img src="Parque-Duarte-A-9.jpg" alt="Parque Central" />
+                <p>Parque Central</p>
+            </div>
+            <div class="attraction">
+                <img src="juan-dolio-beach.jpg" alt="Playas cercanas" />
+                <p>Playas Juan Dolio</p>
+            </div>
+            <div class="attraction">
+                <img src="Gestur-Cueva-de-las-Maravillas.jpg" alt="Museo de la Cultura Dominicana" />
+                <p>Cueva de las maravillas</p>
+            </div>
+        </section>
+
+        <section id="nosotros">
+            <h2>Nosotros / Historia</h2>
+            <p>San Pedro de Macorís es una ciudad con una rica historia y cultura. Fundada en el siglo XIX, ha sido un importante centro para la industria azucarera y la música caribeña.</p>
+            <img src="0.Parador-Fotografico-de-SPM.jpg" alt="Edificio Histórico" />
+        </section>
+
+        <section id="deporte-gastronomia">
+            <h2>Deporte y Gastronomía</h2>
+            <p>La ciudad es conocida por su pasión por el béisbol y su deliciosa gastronomía local, que incluye platos típicos dominicanos como el mangú y el pescado frito.</p>
+            <img src="642dfaece5ffe.jpeg" alt="Mangú y gastronomía" />
+        </section>
+
+        <section id="reserva">
+            <h2>Reservas</h2>
+            <form id="reservation-form">
+                <label for="name">Nombre:</label>
+                <input type="text" id="name" name="name" required />
+
+                <label for="attraction">Atracción Turística:</label>
+                <input type="text" id="attraction" name="attraction" placeholder="Escriba la atracción turística" required />
+
+                <label for="email">Correo Electrónico:</label>
+                <input type="email" id="email" name="email" required />
+
+                <label for="date">Fecha de Reserva:</label>
+                <input type="date" id="date" name="date" required />
+
+                <label for="departure-date">Fecha de Salida:</label>
+                <input type="date" id="departure-date" name="departure-date" required />
+
+                <label for="people">Número de Personas:</label>
+                <input type="number" id="people" name="people" min="1" max="20" required />
+
+                <button type="submit">Enviar Reserva</button>
+            </form>
+            <p id="form-message"></p>
+        </section>
+    </main>
+
+    <script>
+document.getElementById("reservation-form").addEventListener("submit", async function (event) {
+  event.preventDefault();
+
+  const data = {
+    nombre:               document.getElementById("name").value,
+    atraccion_turistica:  document.getElementById("attraction").value,
+    correo_electronico:   document.getElementById("email").value,
+    fecha_reserva:        document.getElementById("date").value,
+    fecha_salida:         document.getElementById("departure-date").value,
+    numero_personas:      document.getElementById("people").value
+  };
+
+  try {
+    const response = await fetch("http://localhost:4000/api/reservas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("✅ Reserva registrada correctamente. ID: " + result.id_reserva);
+      // opcional: limpiar el formulario
+      this.reset();
+    } else {
+      alert("❌ Error: " + result.message);
+    }
+  } catch (error) {
+    alert("⚠️ Error de conexión con el servidor.");
+    console.error(error);
+  }
+});
+</script>
+
+
+   
+</body>
+</html>
