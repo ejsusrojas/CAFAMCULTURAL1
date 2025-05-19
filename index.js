@@ -1,46 +1,81 @@
-// index.js
 const express = require("express");
-const path    = require("path");
-const cors    = require("cors");
-const mysql   = require("mysql2");
+const path = require("path");
+const cors = require("cors");
+const mysql = require("mysql2");
 
-const app  = express();
+const app = express();
 const port = 4000;
 
-// 1) Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2) Sirve el CSS estático en /index.css apuntando a public/index.css
 app.use("/index.css", express.static(path.join(__dirname, "public", "index.css")));
 
-// 3) Sirve el HTML en la raíz (index.html está en la raíz)
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// 4) Configuración de MySQL y creación de base de datos/tabla
-const rootConn = mysql.createConnection({
-  host:     "localhost",
-  user:     "root",            // <-- Ajusta tu usuario
-  password: "Codigo20071204"   // <-- Ajusta tu contraseña
+
+const rootConnConfig = {
+  host: "localhost",
+  user: "root",
+  password: "Codigo20071204"
+};
+
+const rootConn = mysql.createConnection(rootConnConfig);
+
+
+rootConn.on('error', (err) => {
+  
+  console.error("❌ Error en rootConn (evento 'error'):", err);
+  
 });
 
-rootConn.query(
-  `CREATE DATABASE IF NOT EXISTS hotel_reservas
-     CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;`,
-  (err) => {
-    if (err) console.error("❌ Error creando BD:", err);
-    else console.log("✅ Base de datos 'hotel_reservas' lista.");
-    rootConn.end();
+rootConn.connect(connectErr => {
+  if (connectErr) {
+    console.error("❌ Error al conectar a MySQL con rootConn:", connectErr);
+    
+    
+    
+  } else {
+    console.log("✅ Conexión root establecida para operaciones iniciales.");
+    rootConn.query(
+      `CREATE DATABASE IF NOT EXISTS hotel_reservas
+         CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;`,
+      (queryErr) => {
+        if (queryErr) {
+          console.error("❌ Error creando BD:", queryErr);
+          
+          
+        } else {
+          console.log("✅ Base de datos 'hotel_reservas' lista o ya existente.");
+        }
+
+        
+        if (queryErr && queryErr.fatal) {
+          console.warn("⚠️ Conexión root ya cerrada debido a error fatal durante la creación de la BD. No se llamará a end().");
+        } else {
+          rootConn.end((endErr) => {
+            if (endErr) {
+              
+              console.error("❌ Error cerrando rootConn:", endErr);
+            } else {
+              console.log("✅ Conexión root cerrada exitosamente.");
+            }
+          });
+        }
+      }
+    );
   }
-);
+});
+
+
 
 const pool = mysql.createPool({
-  host:     "localhost",
-  user:     "root",            // <-- Ajusta
-  password: "Codigo20071204",  // <-- Ajusta
+  host: "localhost",
+  user: "root",
+  password: "Codigo20071204",
   database: "hotel_reservas",
   waitForConnections: true,
   connectionLimit: 10
@@ -48,24 +83,21 @@ const pool = mysql.createPool({
 
 pool.query(
   `CREATE TABLE IF NOT EXISTS reservas (
-     id INT AUTO_INCREMENT PRIMARY KEY,
-     nombre VARCHAR(100)       NOT NULL,
-     atraccion_turistica VARCHAR(150) NOT NULL,
-     correo_electronico VARCHAR(100)  NOT NULL,
-     fecha_reserva DATE        NOT NULL,
-     fecha_salida DATE         NOT NULL,
-     numero_personas INT       NOT NULL,
-     fecha_creacion TIMESTAMP  DEFAULT CURRENT_TIMESTAMP
-   ) ENGINE=InnoDB;`,
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(100) NOT NULL,
+      atraccion_turistica VARCHAR(150) NOT NULL,
+      correo_electronico VARCHAR(100) NOT NULL,
+      fecha_reserva DATE NOT NULL,
+      fecha_salida DATE NOT NULL,
+      numero_personas INT NOT NULL,
+      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB;`,
   (err) => {
-    if (err) console.error("❌ Error creando tabla:", err);
-    else console.log("✅ Tabla 'reservas' lista.");
+    if (err) console.error("❌ Error creando tabla 'reservas':", err);
+    else console.log("✅ Tabla 'reservas' lista o ya existente.");
   }
 );
 
-// 5) API REST
-
-// GET todos
 app.get("/api/reservas", async (req, res) => {
   try {
     const [rows] = await pool
@@ -90,7 +122,6 @@ app.get("/api/reservas", async (req, res) => {
   }
 });
 
-// POST nueva reserva
 app.post("/api/reservas", async (req, res) => {
   const {
     nombre,
@@ -101,7 +132,6 @@ app.post("/api/reservas", async (req, res) => {
     numero_personas
   } = req.body;
 
-  // validaciones mínimas
   if (
     !nombre ||
     !atraccion_turistica ||
@@ -146,7 +176,6 @@ app.post("/api/reservas", async (req, res) => {
   }
 });
 
-// 6) Levantar servidor
 app.listen(port, () => {
   console.log(`🚀 Corriendo en http://localhost:${port}/`);
   console.log(`📋 GET  /api/reservas`);
